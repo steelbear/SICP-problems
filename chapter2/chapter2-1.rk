@@ -1,0 +1,81 @@
+#lang sicp
+
+;; 1
+(define (gcd a b)
+  (if (= b 0)
+      a
+      (gcd b (remainder a b))))
+
+(define (avg x y)
+  (/ (+ x y) 2.0))
+
+;; 2.1.1
+
+(define (add-rat x y)
+  (make-rat (+ (* (numer x) (denom y))
+               (* (numer y) (denom x)))
+            (* (denom x) (denom y))))
+
+(define (sub-rat x y)
+  (make-rat (- (* (numer x) (denom y))
+               (* (numer y) (denom x)))
+            (* (denom x) (denom y))))
+
+(define (mul-rat x y)
+  (make-rat (* (numer x) (numer y))
+            (* (denom x) (denom y))))
+
+(define (div-rat x y)
+  (make-rat (* (numer x) (denom y))
+            (* (denom x) (numer y))))
+
+;(define (make-rat n d)
+;  (let ((g (gcd n d)))
+;    (cons (/ n g) (/ d g))))
+(define (numer x) (car x))
+(define (denom x) (cdr x))
+
+(define (print-rat x)
+  (newline)
+  (display (numer x))
+  (display "/")
+  (display (denom x)))
+
+;; exercise 2.1
+(define (make-rat n d)
+  (let ((absn (abs n))
+        (absd (abs d))
+        (g (gcd (abs n) (abs d))))
+    (cons (if (> (* n d) 0)
+              (/ absn g)
+              (- (/ absn g)))
+          (/ absd g))))
+
+;; exercise 2.2
+(define (make-segment start end)
+  (cons start end))
+(define (start-segment seg)
+  (car seg))
+(define (end-segment seg)
+  (cdr seg))
+
+(define (make-point x y)
+  (cons x y))
+(define (x-point p)
+  (car p))
+(define (y-point p)
+  (cdr p))
+
+(define (midpoint-segment seg)
+  (make-point (avg (x-point (start-segment seg))
+                   (x-point (end-segment seg)))
+              (avg (y-point (start-segment seg))
+                   (y-point (end-segment seg)))))
+
+(define (print-point p)
+  (newline)
+  (display "(")
+  (display (x-point p))
+  (display ",")
+  (display (y-point p))
+  (display ")"))
