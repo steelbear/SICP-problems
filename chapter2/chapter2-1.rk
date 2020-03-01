@@ -79,3 +79,61 @@
   (display ",")
   (display (y-point p))
   (display ")"))
+
+;; exercise 2.3
+(define (make-quad a b c d)
+  (cons a (cons b (cons c d))))
+
+(define (a-quad q)
+  (car q))
+
+(define (b-quad q)
+  (car (cdr q)))
+
+(define (c-quad q)
+  (car (cdr (cdr q))))
+
+(define (d-quad q)
+  (car (cdr (cdr (cdr q)))))
+
+(define (area-quad q)
+  (let ((pos (+ (* (x-point (a-quad q)) (y-point (b-quad q)))
+                (* (x-point (b-quad q)) (y-point (c-quad q)))
+                (* (x-point (c-quad q)) (y-point (d-quad q)))))
+        (neg (+ (* (x-point (b-quad q)) (y-point (a-quad q)))
+                (* (x-point (c-quad q)) (y-point (b-quad q)))
+                (* (x-point (d-quad q)) (y-point (c-quad q))))))
+    (/ (abs (- pos neg)) 2.0)))
+
+(define (perimeter-quad q)
+  (define (length a b)
+    (sqrt (+ (square (abs (- (x-point a) (x-point b))))
+             (square (abs (- (y-point a) (y-point b)))))))
+  (let ((l1 (length (a-quad q) (b-quad q)))
+        (l2 (length (b-quad q) (c-quad q)))
+        (l3 (length (c-quad q) (c-quad q)))
+        (l4 (length (d-quad q) (a-quad q))))
+    (+ l1 l2 l3 l4)))
+
+;; exercise 2.4
+
+;; (car (cons x y))
+;; (car (lambda (m) (m x y)))
+;; ((lambda (m) (m x y)) (lambda (p q) p))
+;; ((lambda (p q) p) x y)
+;; x
+
+;; exericse 2.5
+(define (tt-cons x y)
+  (* (fast-expt 2 x)
+     (fast-expt 3 y)))
+
+(define (tt-car l)
+  (if (= (remainder l 2) 0)
+      (+ 1 (tt-car (/ l 2)))
+      0))
+
+(define (tt-cdr l)
+  (if (= (remainder l 3) 0)
+      (+ 1 (tt-cdr (/ l 3)))
+      0))
