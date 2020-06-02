@@ -1,5 +1,7 @@
 #lang sicp
 
+(define (square x) (* x x))
+
 (define (cube x) (* x x x))
 
 ;; 1.3.1
@@ -215,3 +217,237 @@
            (search f b a))
           (else
            (error "Values are not of opposite sign" a b)))))
+
+;(define (fixed-point f first-guess)
+;  (define (close-enough? v1 v2)
+;    (< (abs (- v1 v2)) tolerance))
+;  (define (try guess)
+;    (let ((next (f guess)))
+;      (if (close-enough? guess next)
+;          next
+;          (try next))))
+;  (try first-guess))
+
+;; exercise 1.35
+
+;; phi(황금비)는 x^2 = x + 1의 근이고 0이 아니므로 앞의 식에서 x로 나눠주면
+;; x = 1 + 1/x가 되는데 이때 만족하는 x의 값은 phi(황금비)가 된다.
+;; 따라서 \x -> 1 + 1/x의 고정점은 x = phi다.
+
+;; > (fixed-point (lambda (x) (+ 1 (/ 1 x))) 1.0)
+;; 1.6181818181818182
+
+;; exercise 1.36
+
+(define (fixed-point f first-guess)
+  (define (close-enough? v1 v2)
+    (< (abs (- v1 v2)) tolerance))
+  (define (display-and-try guess next)
+    (display guess)
+    (newline)
+    (if (close-enough? guess next)
+          next
+          (try next)))
+  (define (try guess)
+    (let ((next (f guess)))
+      (display-and-try guess next)))
+  (try first-guess))
+
+;; 그냥 돌릴 때
+; > (fixed-point (lambda (x) (/ (log 1000) (log x))) 2.0)
+; 2.0
+; 9.965784284662087
+; 3.004472209841214
+; 6.279195757507157
+; 3.759850702401539
+; 5.215843784925895
+; 4.182207192401397
+; 4.8277650983445906
+; 4.387593384662677
+; 4.671250085763899
+; 4.481403616895052
+; 4.6053657460929
+; 4.5230849678718865
+; 4.577114682047341
+; 4.541382480151454
+; 4.564903245230833
+; 4.549372679303342
+; 4.559606491913287
+; 4.552853875788271
+; 4.557305529748263
+; 4.554369064436181
+; 4.556305311532999
+; 4.555028263573554
+; 4.555870396702851
+;; 총 24번
+
+;; average damping할 때
+; > (fixed-point (lambda (x) (/ (+ x (/ (log 1000) (log x))) 2)) 2.0)
+; 2.0
+; 5.9828921423310435
+; 4.922168721308343
+; 4.628224318195455
+; 4.568346513136242
+; 4.5577305909237005
+; 4.555909809045131
+; 4.555599411610624
+;; 총 8번
+
+;; exercise 1.37
+;; a)
+;(define (cont-frac n d k)
+;  (define (rec n d i k)
+;    (if (> i k)
+;        0
+;        (/ (n i)
+;           (+ (d i)
+;              (rec n d (+ 1 i) k)))))
+;  (rec n d 1 k))
+
+(define (display-cont-frac from to)
+  (define (display-n-go k)
+    (display (cont-frac
+              (lambda (x) 1.0)
+              (lambda (x) 1.0)
+              k))
+    (newline)
+    (display-cont-frac (+ from 1) to))
+  (if (or (< from to)
+          (= from to))
+      (display-n-go from)))
+
+; > (display-cont-frac 1 5)
+; 1.0
+; 0.5
+; 0.6666666666666666
+; 0.6000000000000001
+; 0.625
+;; k = 5 이후로는 소수 4자리 이상이다.
+;; 따라서 k = 5일때 소수점 4자리까지 맞아떨어진다.
+
+;; b)
+(define (cont-frac n d k)
+  (define (iter i result)
+    (if (< 0 i)
+        (iter (- i 1)
+              (/ (n i)
+                 (+ (d i)
+                    result)))
+        result))
+  (iter k 0))
+
+;; exercise 1.38
+
+(define (e-n x) 1)
+(define (e-d x)
+  (if (= (remainder x 3) 2)
+      (* 2.0
+         (+ x 1) 3)
+      1.0))
+
+(define (e k)
+  (+ 2.0 (cont-frac e-n e-d k)))
+
+
+;; exercise 1.39
+
+(define (tan-cf x k)
+  (/ (cont-frac (lambda (y) (square x))
+                (lambda (y) (- (* 2 y) 1))
+                k)
+     x))
+
+;; 1.3.4
+
+(define (average-damp f)
+  (lambda (x) (average x (f x))))
+
+; (define (sqrt x)
+;   (fixed-point (average-damp (lambda (y) (/ x y)))
+;                1.0))
+
+(define (deriv g)
+  (lambda (x)
+    (/ (- (g (+ x dx)) (g x))
+       dx)))
+
+(define dx 0.00001)
+
+(define (newton-transform g)
+  (lambda (x)
+    (- x (/ (g x) ((deriv g) x)))))
+
+(define (newton-method g guess)
+  (fixed-point (newton-transform g) guess))
+
+; (define (sqrt x)
+;   (newton-method (lambda (y) (- (square y) x))
+;                   1.0))
+
+(define (fixed-point-of-transform g transform guess)
+  (fixed-point (transform g) guess))
+
+; (define (sqrt x)
+;   (fixed-point-of-transform (lambda (y) (/ x y))
+;                             average-dump
+;                             1.0))
+
+;; exercise 1.40
+
+(define (dubic a b c)
+  (lambda (x) (+ (cube x)
+                 (* a
+                    (square x))
+                 (* b x)
+                 c)))
+
+;; exercise 1.41
+
+(define (double f)
+  (lambda (x) (f (f x))))
+
+; > (((double (double double)) inc) 5)
+; > (((double (lambda (x) (double (double x)))) inc) 5)
+; > (((lambda (x) (double (double (double (double x))))) inc) 5)
+; > ((double (double (double (double inc)))) 5)
+; > ((double (double (double (lambda (x) (inc (inc x)))))) 5)
+; > ((double (double (lambda (x) (inc (inc (inc (inc x))))))) 5)
+; > ((double (lambda (x) (inc (inc (inc (inc (inc (inc (inc (inc x)))))))))) 5)
+; > ((lambda (x) (inc (inc (inc (inc (inc (inc (inc (inc (inc (inc (inc (inc (inc (inc (inc (inc x))))))))))))))))) 5)
+; > (inc (inc (inc (inc (inc (inc (inc (inc (inc (inc (inc (inc (inc (inc (inc (inc 5))))))))))))))))
+;; 5를 16번 1씩 더하므로
+; 21
+
+;; exercise 1.42
+
+(define (compose f g)
+  (lambda (x) (f (g x))))
+
+;; exercise 1.43
+
+(define (repeated f n)
+  (if (= n 1)
+      f
+      (compose (repeated f (- n 1))
+               f)))
+
+
+;; exercise 1.44
+
+(define (smooth f)
+  (define (three-average a b c)
+    (/ (+ a b c) 3))
+  (lambda (x)
+    (three-average (f (- x dx))
+                   (f x)
+                   (f (+ x dx)))))
+
+(define (n-times-smooth n)
+  (repeated smooth n))
+
+;; exercise 1.45
+
+
+
+;; exercise 1.46
+
