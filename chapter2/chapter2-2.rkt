@@ -153,6 +153,13 @@
                             list2)))))
   (iter seq nil))
 
+;; 2.2.2
+(define (count-leaves x)
+  (cond ((null? x) 0)
+        ((not (pair? x)) 1)
+        (else (+ (count-leaves (car x))
+                 (count-leaves (cdr x))))))
+
 ;; exercise 2.28
 (define (fringe tree)
   (cond ((null? tree) nil)
