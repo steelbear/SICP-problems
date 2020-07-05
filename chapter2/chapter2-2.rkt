@@ -167,3 +167,81 @@
                                     (fringe (cdr tree))))
         (else (cons (car tree)
                     (fringe (cdr tree))))))
+
+;; exercise 2.29
+; commented for d)
+;(define (make-mobile left right)
+;  (list left right))
+;
+;(define (make-branch length structure)
+;  (list length structure))
+
+;; a)
+; commented for d)
+(define (left-branch mobile) (car mobile))
+;(define (right-branch mobile) (cadr mobile))
+(define (branch-length branch) (car branch))
+;(define (branch-structure branch) (cadr branch))
+
+;; b)
+(define (total-weight mobile)
+  (cond ((null? mobile) 0)
+        ((pair? mobile) (+ (total-weight (branch-structure (left-branch mobile)))
+                           (total-weight (branch-structure (right-branch mobile)))))
+        (else mobile)))
+
+;; c)
+(define (balanced? mobile)
+  (define (branch-torque branch)
+    (* (branch-length branch)
+       (total-weight (branch-structure branch))))
+  (or (not (pair? mobile))
+      (let ((left-mobile (branch-structure (left-branch mobile)))
+            (right-mobile (branch-structure (right-branch mobile))))
+        (and (balanced? left-mobile)
+             (balanced? right-mobile)
+             (= (branch-torque (left-branch mobile))
+                (branch-torque (right-branch mobile)))))))
+
+;; d)
+(define (make-mobile left right)
+  (cons left right))
+
+(define (make-branch length structure)
+  (cons length structure))
+
+; list가 cons로 바뀌었다면
+; cadr을 cdr로 바뀌기만 해도 작동한다.
+(define (right-branch mobile) (cdr mobile))
+(define (branch-structure branch) (cdr branch))
+
+;; exercise 2.30
+;(define (square-tree tree)
+;  (cond ((null? tree) nil)
+;        ((not (pair? tree)) (square tree))
+;        (else (cons (square-tree (car tree))
+;                    (square-tree (cdr tree))))))
+
+(define (square-tree tree)
+  (map (lambda (subtree)
+         (if (pair? subtree)
+             (square-tree subtree)
+             (square subtree)))
+       tree))
+
+;; exercise 2.31
+(define (tree-map f tree)
+  (map (lambda (subtree)
+         (if (pair? subtree)
+             (tree-map f subtree)
+             (f subtree)))
+       tree))
+
+;; exercise 2.32
+(define (subsets s)
+  (if (null? s)
+      (list nil) ; 더이상 조합할 원소가 없다면 공집합
+      (let ((rest (subsets (cdr s))))
+        (append rest ; 맨 앞의 원소를 제외한 원소들로 부분집합 구하기
+                (map (lambda (e) (cons (car s) e)) ; rest에 있는 부분집합에
+                     rest)))))                     ; 제외했던 맨 앞 원소를 집어넣기
