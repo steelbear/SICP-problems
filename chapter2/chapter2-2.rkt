@@ -4,28 +4,49 @@
 (define (square x)
   (* x x))
 
+(define (next n)
+  (if (= n 2)
+      3
+      (+ n 2)))
+
+(define (divides? a b)
+  (= (remainder b a) 0))
+
+(define (find-divisor n test-divisor)
+  (cond ((> (square test-divisor) n) n)
+        ((divides? test-divisor n) test-divisor)
+        (else (find-divisor n (next test-divisor)))))
+
+(define (smallest-divisor n)
+  (find-divisor n 2))
+
+(define (prime? n)
+  (= n (smallest-divisor n)))
+
 ;; 2.2.1
 (define (list-ref items n)
   (if (= n 0)
       (car items)
       (list-ref (cdr items) (- n 1))))
 
+; commented for 2.33
 ;(define (length items)
 ;  (if (null? items)
 ;      0
 ;      (+ 1 (length (cdr items)))))
 
-(define (length items)
-  (define (length-iter a count)
-    (if (null? a)
-        count
-        (length-iter (cdr a) (+ 1 count))))
-  (length-iter items 0))
+;(define (length items)
+;  (define (length-iter a count)
+;    (if (null? a)
+;        count
+;        (length-iter (cdr a) (+ 1 count))))
+;  (length-iter items 0))
 
-(define (append list1 list2)
-  (if (null? list1)
-      list2
-      (cons (car list1) (append (cdr list1) list2))))
+; commented for 2.33
+;(define (append list1 list2)
+;  (if (null? list1)
+;      list2
+;      (cons (car list1) (append (cdr list1) list2))))
 
 ;; exercise 2.17
 (define (last-pair items)
@@ -154,11 +175,12 @@
   (iter seq nil))
 
 ;; 2.2.2
-(define (count-leaves x)
-  (cond ((null? x) 0)
-        ((not (pair? x)) 1)
-        (else (+ (count-leaves (car x))
-                 (count-leaves (cdr x))))))
+; commented for 2.35
+;(define (count-leaves x)
+;  (cond ((null? x) 0)
+;        ((not (pair? x)) 1)
+;        (else (+ (count-leaves (car x))
+;                 (count-leaves (cdr x))))))
 
 ;; exercise 2.28
 (define (fringe tree)
@@ -245,3 +267,144 @@
         (append rest ; 맨 앞의 원소를 제외한 원소들로 부분집합 구하기
                 (map (lambda (e) (cons (car s) e)) ; rest에 있는 부분집합에
                      rest)))))                     ; 제외했던 맨 앞 원소를 집어넣기
+
+;; 2.2.3 (continue)
+(define (filter predicate sequence)
+  (cond ((null? sequence) nil)
+        ((predicate (car sequence))
+         (cons (car sequence)
+               (filter predicate (cdr sequence))))
+        (else (filter predicate (cdr sequence)))))
+
+(define (accumulate op initial sequence)
+  (if (null? sequence)
+      initial
+      (op (car sequence)
+          (accumulate op initial (cdr sequence)))))
+
+(define (enumerate-interval low high)
+  (if (> low high)
+      nil
+      (cons low (enumerate-interval (+ low 1) high))))
+
+(define (enumerate-tree tree)
+  (cond ((null? tree) nil)
+        ((not (pair? tree)) (list tree))
+        (else (append (enumerate-tree (car tree))
+                      (enumerate-tree (cdr tree))))))
+
+;; exercise 2.33
+;(define (map p sequence)
+;  (accumulate (lambda (x y) (cons (p x) y)) nil sequence))
+
+(define (append seq1 seq2)
+  (accumulate cons seq1 seq2))
+
+(define (length sequence)
+  (accumulate (lambda (x y) (+ 1 y)) 0 sequence))
+
+;; exercise 2.34
+(define (horner-eval x coefficient-sequence)
+  (accumulate (lambda (this-coeff higher-terms)
+                (+ (* higher-terms x) this-coeff))
+              0
+              coefficient-sequence))
+
+;; exercise 2.35
+(define (count-leaves t)
+  (accumulate + 0 (map (lambda (subtree)
+                         (if (not (pair? subtree))
+                             1
+                             (count-leaves subtree)))
+                       t)))
+
+;; exercise 2.36
+(define (accumulate-n op init seqs)
+  (if (null? (car seqs))
+      nil
+      (cons (accumulate op init (map car seqs))
+            (accumulate-n op init (map cdr seqs)))))
+
+;; exercise 2.37
+(define (dot-product v w)
+  (accumulate + 0 (map * v w)))
+
+(define (matrix-*-vector m v)
+  (map (lambda (w) (dot-product v w)) m))
+
+(define (transpose mat)
+  (accumulate-n cons nil mat))
+
+(define (matrix-*-matrix m n)
+  (let ((cols (transpose n)))
+    (map (lambda (v)
+           (map (lambda (w) (dot-product v w)) cols))
+         m)))
+
+;; exericse 2.38
+(define (fold-right op initial sequence)
+  (accumulate op initial sequence))
+
+(define (fold-left op initial sequence)
+  (define (iter result rest)
+    (if (null? rest)
+        result
+        (iter (op result (car rest))
+              (cdr rest))))
+  (iter initial sequence))
+
+; > (fold-right / 1 (list 1 2 3))
+; 1 1/2
+; > (fold-left / 1 (list 1 2 3))
+; 1/6
+; > (fold-right list nil (list 1 2 3))
+; (1 (2 (3 ())))
+; > (fold-left list nil (list 1 2 3))
+; (((() 1) 2) 3)
+
+; 피연산자의 위치에 영향을 받는 연산자면
+; fold-left와 fold-right의 결과는 다르게 나온다.
+; 하지만 피연산자의 위치가 상관없는 연산자라면
+; fold-left와 fold-right의 결과는 같다.
+
+;; exercise 2.39
+;(define (reverse sequence)
+;  (fold-right (lambda (x y)
+;                (append y (list x)))
+;              nil
+;              sequence))
+
+;(define (reverse sequence)
+;  (fold-left (lambda (x y) (cons y x)) nil sequence))
+
+;; 2.2.3 (continue)
+(define (flatmap proc seq)
+  (accumulate append nil (map proc seq)))
+
+(define (make-pair-sum pair)
+  (list (car pair) (cadr pair) (+ (car pair) (cadr pair))))
+
+(define (prime-sum? pair)
+  (prime? (+ (car pair) (cadr pair))))
+
+;; exercise 2.40
+(define (unique-pairs n)
+  (flatmap (lambda (i)
+             (map (lambda (j) (list i j))
+                  (enumerate-interval 1 (- i 1))))
+           (enumerate-interval 1 n)))
+
+(define (prime-sum-pairs n)
+  (map make-pair-sum (filter prime-sum? (unique-pairs n))))
+
+;; exercise 2.41
+(define (triple-sum s n)
+  (define (sum-of-three items)
+    (+ (car items) (cadr items) (caddr items)))
+  (filter (lambda (l) (= (sum-of-three l) s))
+          (flatmap (lambda (i)
+                     (flatmap (lambda (j)
+                                (map (lambda (k) (list i j k))
+                                     (enumerate-interval 1 (- j 1))))
+                              (enumerate-interval 1 (- i 1))))
+                   (enumerate-interval 1 n))))
