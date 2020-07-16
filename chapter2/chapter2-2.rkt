@@ -408,3 +408,67 @@
                                      (enumerate-interval 1 (- j 1))))
                               (enumerate-interval 1 (- i 1))))
                    (enumerate-interval 1 n))))
+
+;; exercise 2.42
+(define (queens board-size)
+  (define (queen-cols k)
+    (if (= k 0)
+        (list empty-board)
+        (filter
+         (lambda (positions) (safe? k positions))
+         (flatmap
+          (lambda (rest-of-queens)
+            (map (lambda (new-row)
+                   (adjoin-position new-row k rest-of-queens))
+                 (enumerate-interval 1 board-size)))
+          (queen-cols (- k 1))))))
+  (queen-cols board-size))
+
+(define (make-queen k r) (cons k r))
+(define (queen-k q) (car q))
+(define (queen-r q) (cdr q))
+
+(define empty-board nil)
+
+(define (adjoin-position new-row k positions)
+  (cons (make-queen k new-row)
+        positions))
+
+(define (safe? k positions)
+  (let ((last-queen (car positions))
+        (except-last-queen (cdr positions)))
+    (define (safe-row? k positions)
+      (accumulate (lambda (x y) (and x y))
+                  #t
+                  (map (lambda (q)
+                         (not (= (queen-r q) (queen-r last-queen))))
+                       except-last-queen)))
+    (define (safe-diagonal? k positions)
+      (accumulate (lambda (x y) (and x y))
+                  #t
+                  (append (map (lambda (q)
+                                 (not (= (- (queen-r q) (- (queen-k q) k))
+                                         (queen-r last-queen))))
+                               except-last-queen)
+                          (map (lambda (q)
+                                 (not (= (+ (queen-r q) (- (queen-k q) k))
+                                         (queen-r last-queen))))
+                               except-last-queen))))
+    (and (safe-row? k positions)
+         (safe-diagonal? k positions))))
+
+;; exercise 2.43
+; Louis가 짠 방식으로 설계하면
+; 퀸을 놓는 한가지 가능성을 계산할 때마다
+; 다음 줄에 놓을 수 있는 모든 가능성을 계산해야 한다.
+; 즉, 한 줄에 퀸을 놓을 수 있는 경우의 수를 구할 때
+; (queens (- n 1))은 8번 계산된다.
+
+; 하지만 위에서 제시한 방식으로 계산하면
+; 미리 그 줄에 놓을 수 있는 모든 가능성을 구한 후
+; 다음 줄에 놓을 수 있는 여덟가지 가능성을 놓아본다.
+; 즉, 한 줄에 퀸을 놓을 수 있는 경우의 수를 구할 때
+; (queens (- n 1))은 한번만 계산된다.
+
+; 위의 방법대로 (queens 8)을 구하는데 걸리는 시간을 T라고 하면
+; Louis의 방법은 (8^8-1)T의 시간이 걸린다.
