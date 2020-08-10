@@ -30,7 +30,15 @@
 ;; exercise 2.54
 (define (equal? a b)
   (cond ((and (null? a) (null? b)) #t)
-        ((eq? (car a) (car b)) (equal? (cdr a) (cdr b)))
+        ((and (pair? a)
+              (pair? b))
+         (and (equal? (car a) (car b)) (equal? (cdr a) (cdr b))))
+        ((and (symbol? a)
+              (symbol? b))
+         (eq? a b))
+        ((and (number? a)
+              (=number? a b))
+         (= a b))
         (else #f)))
 
 ;; exercise 2.55
@@ -107,7 +115,7 @@
         ((exponentiation? exp)
          (make-product (make-product (exponent exp)
                                      (make-exponentiation (base exp)
-                                                         (- (exponent exp) 1)))
+                                                          (- (exponent exp) 1)))
                        (deriv (base exp) var)))
         (else
          (error "unknown expression type -- DERIV" exp))))
@@ -211,3 +219,96 @@
   (cond ((null? (cdr x)) #t)
         ((eq? (cadr x) '*) (product? (cddr x)))
         (else #f)))
+
+;; 2.3.3
+;(define (element-of-set? x set)
+;  (cond ((null? set) #f)
+;        ((equal? x (car set)) #t)
+;        (else (element-of-set? x (cdr set)))))
+
+;(define (adjoin-set x set)
+;  (if (element-of-set? x set)
+;      set
+;      (cons x set)))
+
+;(define (intersection-set set1 set2)
+;  (cond ((or (null? set1) (null? set2)) '())
+;        ((element-of-set? (car set1) set2)
+;         (cons (car set1)
+;               (intersection-set (cdr set1) set2)))
+;        (else (intersection-set (cdr set1) set2))))
+
+;; exercise 2.59
+;(define (union-set set1 set2)
+;  (cond ((null? set1) set2)
+;        ((not (element-of-set? (car set1) set2))
+;         (cons (car set1) (union-set (cdr set1) set2)))
+;        (else
+;         (union-set (cdr set1) set2))))
+
+;; exercise 2.60
+;(define (adjoin-set x set)
+;  (cons x set))
+
+;(define (union-set set1 set2)
+;  (append set1 set2))
+
+; ajoin-set이나 union-set을 자주 사용할 때
+
+;; 2.3.3 (continue)
+(define (element-of-set? x set)
+  (cond ((null? set) #f)
+        ((= x (car set)) #t)
+        ((> x (car set)) #f)
+        ((< x (car set))
+         (element-of-set? x (cdr set)))))
+
+(define (intersection-set set1 set2)
+  (if (or (null? set1) (null? set2))
+      '()
+      (let ((x1 (car set1)) (x2 (car set2)))
+        (cond ((= x1 x2)
+               (cons x1
+                     (intersection-set (cdr set1)
+                                       (cdr set2))))
+              ((< x1 x2)
+               (intersection-set (cdr set1) set2))
+              ((> x1 x2)
+               (intersection-set set1 (cdr set2)))))))
+
+;; exercise 2.61
+(define (adjoin-set x set)
+  (cond ((null? set) (list x))
+        ((> x (car set))
+         (cons (car set)
+               (adjoin-set x (cdr set))))
+        ((= x (car set)) set)
+        ((< x (car set)) (cons x set))))
+
+;adjoin-set을 구현할 때 순서있는 리스트의 장점은
+;굳이 set에 x가 있는지 먼저 확인할 필요가 없다는 점이다.
+;순서있는 리스트를 사용한다면 element-of-set?을 통해 확인하는 대신에
+;x와 (car set)의 대소비교를 통해
+;x가 set에 이미 포함되어있는지, 그리고 어디에 x를 집어넣어야하는지
+;재귀를 통해 확인이 가능하다.
+;그래서 평균적으로 n/2정도의 단계를 거치게 된다.
+
+;; exercise 2.62
+(define (union-set set1 set2)
+  (cond ((null? set1) set2)
+        ((null? set2) set1)
+        (else
+         (let ((x1 (car set1)) (x2 (car set2)))
+           (cond ((= x1 x2)
+                  (cons x1
+                        (union-set (cdr set1)
+                                   (cdr set2))))
+                 ((< x1 x2)
+                  (cons x1
+                        (union-set (cdr set1)
+                                   set2)))
+                 ((> x1 x2)
+                  (cons x2
+                        (union-set set1
+                                   (cdr set2)))))))))
+  
