@@ -311,4 +311,18 @@
                   (cons x2
                         (union-set set1
                                    (cdr set2)))))))))
-  
+
+;; exercise 2.63
+;; a)
+; 같다. left-tree, entry, right-tree 순서는 서로 같다.
+;; b)
+; 둘다 O(log_2 n)
+
+;; exercise 2.64
+;원소 리스트와 트리에 쓰일 원소 개수를 매개변수로 받으면
+;먼저 left-tree를 구한다.
+;left-tree는 처음에 받았던 원소 리스트와 left-tree에 쓰일 원소들의 개수(left-size)를 넘겨받으면
+;만들어진 left-tree와 남은 원소 리스트(non-left-elts)를 pair를 통해 받는다.(left-result)
+;여기서 non-left-elts에서 entry를 얻고(this-entry) 남은 원소들로 right-tree를 만든다.
+;먼저 entry까지 뽑고 남은 원소 리스트와 right-tree에 쓰일 원소들의 개수(right-size)를 구한다음
+;이를 통해 right-tree를 구한다. 이때 right-tree까지 만들고 남은 원소는 remaining-elts로 내보낸다.
