@@ -256,34 +256,34 @@
 ; ajoin-set이나 union-set을 자주 사용할 때
 
 ;; 2.3.3 (continue)
-(define (element-of-set? x set)
-  (cond ((null? set) #f)
-        ((= x (car set)) #t)
-        ((> x (car set)) #f)
-        ((< x (car set))
-         (element-of-set? x (cdr set)))))
+;(define (element-of-set? x set)
+;  (cond ((null? set) #f)
+;        ((= x (car set)) #t)
+;        ((> x (car set)) #f)
+;        ((< x (car set))
+;         (element-of-set? x (cdr set)))))
 
-(define (intersection-set set1 set2)
-  (if (or (null? set1) (null? set2))
-      '()
-      (let ((x1 (car set1)) (x2 (car set2)))
-        (cond ((= x1 x2)
-               (cons x1
-                     (intersection-set (cdr set1)
-                                       (cdr set2))))
-              ((< x1 x2)
-               (intersection-set (cdr set1) set2))
-              ((> x1 x2)
-               (intersection-set set1 (cdr set2)))))))
+;(define (intersection-set set1 set2)
+;  (if (or (null? set1) (null? set2))
+;      '()
+;      (let ((x1 (car set1)) (x2 (car set2)))
+;        (cond ((= x1 x2)
+;               (cons x1
+;                     (intersection-set (cdr set1)
+;                                       (cdr set2))))
+;              ((< x1 x2)
+;               (intersection-set (cdr set1) set2))
+;              ((> x1 x2)
+;               (intersection-set set1 (cdr set2)))))))
 
 ;; exercise 2.61
-(define (adjoin-set x set)
-  (cond ((null? set) (list x))
-        ((> x (car set))
-         (cons (car set)
-               (adjoin-set x (cdr set))))
-        ((= x (car set)) set)
-        ((< x (car set)) (cons x set))))
+;(define (adjoin-set x set)
+;  (cond ((null? set) (list x))
+;        ((> x (car set))
+;         (cons (car set)
+;               (adjoin-set x (cdr set))))
+;        ((= x (car set)) set)
+;        ((< x (car set)) (cons x set))))
 
 ;adjoin-set을 구현할 때 순서있는 리스트의 장점은
 ;굳이 set에 x가 있는지 먼저 확인할 필요가 없다는 점이다.
@@ -294,31 +294,96 @@
 ;그래서 평균적으로 n/2정도의 단계를 거치게 된다.
 
 ;; exercise 2.62
-(define (union-set set1 set2)
-  (cond ((null? set1) set2)
-        ((null? set2) set1)
-        (else
-         (let ((x1 (car set1)) (x2 (car set2)))
-           (cond ((= x1 x2)
-                  (cons x1
-                        (union-set (cdr set1)
-                                   (cdr set2))))
-                 ((< x1 x2)
-                  (cons x1
-                        (union-set (cdr set1)
-                                   set2)))
-                 ((> x1 x2)
-                  (cons x2
-                        (union-set set1
-                                   (cdr set2)))))))))
+;(define (union-set set1 set2)
+;  (cond ((null? set1) set2)
+;        ((null? set2) set1)
+;        (else
+;         (let ((x1 (car set1)) (x2 (car set2)))
+;           (cond ((= x1 x2)
+;                  (cons x1
+;                        (union-set (cdr set1)
+;                                   (cdr set2))))
+;                 ((< x1 x2)
+;                  (cons x1
+;                        (union-set (cdr set1)
+;                                   set2)))
+;                 ((> x1 x2)
+;                  (cons x2
+;                        (union-set set1
+;                                   (cdr set2)))))))))
+
+;; 2.3.3 (continue)
+(define (entry tree) (car tree))
+(define (left-branch tree) (cadr tree))
+(define (right-branch tree) (caddr tree))
+
+(define (make-tree entry left right)
+  (list entry left right))
+
+(define (element-of-set? x set)
+  (cond ((null? set) #f)
+        ((= x (entry set)) #t)
+        ((< x (entry set))
+         (element-of-set? x (left-branch set)))
+        ((> x (entry set))
+         (element-of-set? x (right-branch set)))))
+
+(define (adjoin-set x set)
+  (cond ((null? set) (make-tree x '() '()))
+        ((= x (entry set)) set)
+        ((< x (entry set))
+         (make-tree (entry set)
+                    (adjoin-set x (left-branch set))
+                    (right-branch set)))
+        ((> x (entry set))
+         (make-tree (entry set)
+                    (left-branch set)
+                    (adjoin-set x (right-branch set))))))
 
 ;; exercise 2.63
+(define (tree->list-1 tree)
+  (if (null? tree)
+      '()
+      (append (tree->list-1 (left-branch tree))
+              (cons (entry tree)
+                    (tree->list-1 (right-branch tree))))))
+
+(define (tree->list-2 tree)
+  (define (copy-to-list  tree result-list)
+    (if (null? tree)
+        result-list
+        (copy-to-list (left-branch tree)
+                      (cons (entry tree)
+                            (copy-to-list (right-branch tree)
+                                          result-list)))))
+  (copy-to-list tree '()))
+
+(define tree->list tree->list-1)
 ;; a)
 ; 같다. left-tree, entry, right-tree 순서는 서로 같다.
 ;; b)
 ; 둘다 O(log_2 n)
 
 ;; exercise 2.64
+(define (list->tree elements)
+  (car (partial-tree elements (length elements))))
+
+(define (partial-tree elts n)
+  (if (= n 0)
+      (cons '() elts)
+      (let ((left-size (quotient (- n 1) 2)))
+        (let ((left-result (partial-tree elts left-size)))
+          (let ((left-tree (car left-result))
+                (non-left-elts (cdr left-result))
+                (right-size (- n (+ left-size 1))))
+            (let ((this-entry (car non-left-elts))
+                  (right-result (partial-tree (cdr non-left-elts)
+                                              right-size)))
+              (let ((right-tree (car right-result))
+                    (remaining-elts (cdr right-result)))
+                (cons (make-tree this-entry left-tree right-tree)
+                      remaining-elts))))))))
+
 ;원소 리스트와 트리에 쓰일 원소 개수를 매개변수로 받으면
 ;먼저 left-tree를 구한다.
 ;left-tree는 처음에 받았던 원소 리스트와 left-tree에 쓰일 원소들의 개수(left-size)를 넘겨받으면
@@ -326,3 +391,68 @@
 ;여기서 non-left-elts에서 entry를 얻고(this-entry) 남은 원소들로 right-tree를 만든다.
 ;먼저 entry까지 뽑고 남은 원소 리스트와 right-tree에 쓰일 원소들의 개수(right-size)를 구한다음
 ;이를 통해 right-tree를 구한다. 이때 right-tree까지 만들고 남은 원소는 remaining-elts로 내보낸다.
+
+;; exercise 2.65
+(define (union-set set1 set2)
+  (define (iter list1 list2 result)
+    (cond ((null? list1) (append result list2))
+          ((null? list2) (append result list1))
+          (else (let ((x1 (car list1))
+                      (x2 (car list2)))
+                  (cond ((= x1 x2)
+                         (iter (cdr list1)
+                               (cdr list2)
+                               (append result (list x1))))
+                        ((> x1 x2)
+                         (iter list1
+                               (cdr list2)
+                               (append result (list x2))))
+                        ((< x1 x2)
+                         (iter (cdr list1)
+                               list2
+                               (append result (list x1)))))))))
+  (list->tree (iter (tree->list set1)
+                    (tree->list set2)
+                    '())))
+
+(define (intersection-set set1 set2)
+  (define (filter-same s1 s2 result)
+    (if (or (null? s1) (null? s2))
+         result
+         (let ((x1 (car s1))
+               (x2 (car s2)))
+           (cond ((= x1 x2) (filter-same (cdr s1)
+                                         (cdr s2)
+                                         (append result (list x1))))
+                 ((> x1 x2) (filter-same s1
+                                         (cdr s2)
+                                         result))
+                 ((< x1 x2) (filter-same (cdr s1)
+                                         s2
+                                         result))))))
+  (list->tree (filter-same (tree->list set1)
+                           (tree->list set2)
+                           '())))
+
+;; 2.3.3 (continue)
+(define (key record) (car record))
+
+;(define (lookup given-key set-of-records)
+;  (cond ((null? set-of-records) #f)
+;        ((equal? given-key (key (car set-of-records)))
+;         (car set-of-records))
+;        (else (lookup given-key (cdr set-of-records)))))
+
+;; exericse 2.66
+
+(define (lookup given-key set-of-records)
+  (cond ((null? set-of-records) #f)
+        ((= given-key
+            (key (entry set-of-records)))
+         (entry set-of-records))
+        ((> given-key
+            (key (entry set-of-records)))
+         (lookup given-key (right-branch set-of-records)))
+        ((< given-key
+            (key (entry set-of-records)))
+         (lookup given-key (left-branch set-of-records)))))
