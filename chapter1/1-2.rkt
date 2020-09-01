@@ -103,13 +103,13 @@
 ; f(n) = log(n) + log(10)/log(3)
 
 ;; exercise 1.16
-(define (fase-expt-iter b n res)
+(define (fast-expt-iter b n res)
   (cond ((= n 0) res)
-        ((even? n) (fase-expt-iter (square b) (/ n 2) res))
-        (else (fase-expt b (- n 1) (* res b)))))
+        ((even? n) (fast-expt-iter (square b) (/ n 2) res))
+        (else (fast-expt b (- n 1) (* res b)))))
 
-(define (fase-expt b n)
-  (fase-expt-iter b n 1))
+(define (fast-expt b n)
+  (fast-expt-iter b n 1))
 
 ;; exercise 1.17 & 1.18
 
