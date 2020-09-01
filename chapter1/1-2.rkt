@@ -1,5 +1,7 @@
 #lang sicp
 
+(#%provide (all-defined))
+
 ; load from 1.1
 (define (square x) (* x x))
 

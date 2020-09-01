@@ -1,16 +1,6 @@
 #lang sicp
 
-;; 1.2
-
-(define (square x) (* x x))
-
-(define (fast-expt-iter b n res)
-  (cond ((= n 0) res)
-        ((even? n) (fast-expt-iter (square b) (/ n 2) res))
-        (else (fast-expt b (- n 1) (* res b)))))
-
-(define (fast-expt b n)
-  (fast-expt-iter b n 1))
+(#%require "../chapter1/1-2.rkt")
 
 ;; 2.3.1
 (define (memq item x)
