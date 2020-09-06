@@ -1,6 +1,16 @@
 #lang sicp
 
-(#%require "../chapter1/1-2.rkt")
+;; 1.2
+
+(define (square x) (* x x))
+
+(define (fast-expt-iter b n res)
+  (cond ((= n 0) res)
+        ((even? n) (fast-expt-iter (square b) (/ n 2) res))
+        (else (fast-expt b (- n 1) (* res b)))))
+
+(define (fast-expt b n)
+  (fast-expt-iter b n 1))
 
 ;; 2.3.1
 (define (memq item x)
@@ -577,3 +587,18 @@
     SHA NA NA NA NA NA NA NA NA
     WAH YIP YIP YIP YIP YIP YIP YIP YIP YIP
     SHA BOOM))
+
+;; exercise 2.71
+; n = 5
+; the longest = 1 weight(4 bits)
+; the shortest = 16 weight(1 bit)
+; n = 10
+; the longest = 1 weight(9 bits)
+; the shortest = 512 weight(1 bit)
+
+;; exercise 2.72
+; 만약 허프만 트리가 균형 이진 트리라면
+; 빈도에 관계없이 O(log_2(n))이 된다.
+; 2.71과 같은 모습이라면
+; 가장 빈번한 코드는 O(1)
+; 가장 뜸한 코드는  O(n)이 된다.
