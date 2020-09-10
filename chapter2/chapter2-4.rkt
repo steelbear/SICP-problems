@@ -1,5 +1,14 @@
 #lang sicp
 
+;; for put and get (use in racket)
+(define *op-table* (make-hash))
+
+(define (put op type proc)
+  (hash-set! *op-table* (list op type) proc))
+
+(define (get op type)
+  (hash-ref *op-table* (list op type) '()))
+
 ;; 1.2
 (define (square x) (* x x))
 
