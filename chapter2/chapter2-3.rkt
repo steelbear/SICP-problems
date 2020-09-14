@@ -1,604 +1,294 @@
 #lang sicp
 
 ;; 1.2
-
 (define (square x) (* x x))
 
-(define (fast-expt-iter b n res)
-  (cond ((= n 0) res)
-        ((even? n) (fast-expt-iter (square b) (/ n 2) res))
-        (else (fast-expt b (- n 1) (* res b)))))
-
-(define (fast-expt b n)
-  (fast-expt-iter b n 1))
-
-;; 2.3.1
-(define (memq item x)
-  (cond ((null? x) false)
-        ((eq? item (car x)) x)
-        (else (memq item (cdr x)))))
-
-;; exercise 2.53
-; (list 'a 'b 'c) => (a b c)
-; (list (list 'george)) => ((george))
-; (cdr '((x1 x2) (y1 y2))) => ((y1 y2))
-; (cadr '((x1 x2) (y1 y2))) => (y1 y2)
-; (pair? (car '(a short list))) => #false
-; (memq 'red '((red shoes) (blue socks))) => #false
-; (memq 'red '(red shoes blue socks)) => (red shoes blue socks)
-
-;; exercise 2.54
-(define (equal? a b)
-  (cond ((and (null? a) (null? b)) #t)
-        ((and (pair? a)
-              (pair? b))
-         (and (equal? (car a) (car b)) (equal? (cdr a) (cdr b))))
-        ((and (symbol? a)
-              (symbol? b))
-         (eq? a b))
-        ((and (number? a)
-              (=number? a b))
-         (= a b))
-        (else #f)))
-
-;; exercise 2.55
-; ''abracadabra => (list 'quote 'abracadabra)
-
-;; 2.3.2
-;(define (deriv exp var)
-;  (cond ((number? exp) 0)
-;        ((variable? exp)
-;         (if (same-variable? exp var) 1 0))
-;        ((sum? exp)
-;         (make-sum (deriv (addend exp) var)
-;                   (deriv (augend exp) var)))
-;        ((product? exp)
-;         (make-sum
-;          (make-product (multiplier exp)
-;                        (deriv (multiplicand exp) var))
-;          (make-product (deriv (multiplier exp))
-;                        (multiplicand exp))))
-;        (else
-;         (error "unknown expression type -- DERIV" exp))))
-
+;; 2.3
 (define (variable? x) (symbol? x))
 
 (define (same-variable? v1 v2)
   (and (variable? v1) (variable? v2) (eq? v1 v2)))
 
-;;(define (make-sum a1 a2) (list '+ a1 a2))
-;(define (make-sum a1 a2)
-;  (cond ((=number? a1 0) a2)
-;        ((=number? a2 0) a1)
-;        ((and (number? a1) (number? a2)) (+ a1 a2))
-;        (else (list '+ a1 a2))))
+;; 2.4.1
+(define (add-complex x1 x2)
+  (make-from-real-imag (+ (real-part x1) (real-part x2))
+                       (+ (imag-part x1) (imag-part x2))))
 
-;;(define (make-product m1 m2) (list '* m1 m2))
-;(define (make-product m1 m2)
-;  (cond ((or (=number? m1 0) (=number? m2 0)) 0)
-;        ((=number? m1 1) m2)
-;        ((=number? m2 1) m1)
-;        ((and (number? m1) (number? m2)) (* m1 m2))
-;        (else (list '* m1 m2))))
+(define (sub-complex x1 x2)
+  (make-from-real-imag (- (real-part x1) (real-part x2))
+                       (- (imag-part x1) (imag-part x2))))
 
-;(define (sum? x)
-;  (and (pair? x) (eq? (car x) '+)))
+(define (mul-complex x1 x2)
+  (make-from-mag-ang (* (magnitude x1) (magnitude x2))
+                     (+ (angle x1) (angle x2))))
 
-;(define (augend s) (cadr s))
+(define (div-complex x1 x2)
+  (make-from-mag-ang (/ (magnitude x1) (magnitude x2))
+                     (- (angle x1) (angle x2))))
 
-;(define (addend s) (caddr s))
+;(define (real-part z) (car z))
 
-;(define (product? x)
-;  (and (pair? x) (eq? (car x) '*)))
+;(define (imag-part z) (cdr z))
 
-;(define (multiplicand s) (cadr s))
+;(define (magnitude z)
+;  (sqrt (+ (square (real-part z)) (square (imag-part z)))))
 
-;(define (multiplier s) (caddr s))
+;(define (angle z)
+;  (atan (imag-part z) (real-part z)))
 
-(define (=number? exp num)
-  (and (number? exp) (= exp num)))
+;(define (make-from-real-imag x y) (cons x y))
 
-;; exercise 2.56
+;(define (make-from-mag-ang r a)
+;  (cons (* r (cos a)) (* r (sin a))))
+
+;; 2.4.2
+
+(define (attach-tag type-tag contents)
+  (cons type-tag contents))
+
+(define (type-tag datum)
+  (if (pair? datum)
+      (car datum)
+      (error "Bad tagged datum -- TYPE-TAG" datum)))
+
+(define (contents datum)
+  (if (pair? datum)
+      (cdr datum)
+      (error "Bad tagged datum -- CONTENTS" datum)))
+
+;(define (rectangular? z)
+;  (eq? (type-tag z) 'rectangular))
+
+;(define (polar? z)
+;  (eq? (type-tag z) 'polar))
+
+
+; procedures for rectangular
+;(define (real-part-rectangular z) (car z))
+
+;(define (imag-part-rectangular z) (cdr z))
+
+;(define (magnitude-rectangular z)
+;  (sqrt (+ (square (real-part-rectangular z))
+;           (square (imag-part-rectangular z)))))
+
+;(define (angle-rectangular z)
+;  (atan (imag-part-rectangular z)
+;        (real-part-rectangular z)))
+
+;(define (make-from-real-imag-rectangular x y)
+;  (attach-tag 'rectangular (cons x y)))
+
+;(define (make-from-mag-ang-rectangular r a)
+;  (attach-tag 'rectangular
+;              (cons (* r (cos a)) (* r (sin a)))))
+
+; procedures for polar
+;(define (real-part-polar z)
+;  (* (magnitude-polar z) (cos (angle-polar z))))
+
+;(define (imag-part-polar z)
+;  (* (magnitude-polar z) (sin (angle-polar z))))
+
+;(define (magnitude-polar z) (car z))
+
+;(define (angle-polar z) (cdr z))
+
+;(define (make-from-real-imag-polar x y)
+;  (attach-tag 'polar
+;              (cons (sqrt (+ (square x) (square y)))
+;                    (atan y x))))
+
+;(define (make-from-mag-ang-polar r a)
+;  (attach-tag 'polar (cons r a)))
+
+; make general procedures
+;(define (real-part z)
+;  (cond ((rectangular? z)
+;         (real-part-rectangular (contents z)))
+;        ((polar? z)
+;         (real-part-polar (contents z)))
+;        (else (error "Unknown type -- REAL-PART" z))))
+
+;(define (imag-part z)
+;  (cond ((rectangular? z)
+;         (imag-part-rectangular (contents z)))
+;        ((polar? z)
+;         (imag-part-polar (contents z)))
+;        (else (error "Unknown type -- IMAG-PART" z))))
+
+;(define (magnitude z)
+;  (cond ((rectangular? z)
+;         (magnitude-rectangular (contents z)))
+;        ((polar? z)
+;         (magnitude-polar (contents z)))
+;        (else (error "Unknown type -- MAGNITUDE" z))))
+
+;(define (angle z)
+;  (cond ((rectangular? z)
+;         (angle-rectangular (contents z)))
+;        ((polar? z)
+;         (angle-polar (contents z)))
+;        (else (error "Unknown type -- ANGLE" z))))
+
+;(define (make-from-real-imag x y)
+;  (make-from-real-imag-rectangular x y))
+
+;(define (make-from-mag-ang r a)
+;  (make-from-mag-ang-polar r a))
+
+;; 2.4.3
+(define (install-rectangular-package)
+  (define (real-part z) (car z))
+  (define (imag-part z) (cdr z))
+  (define (magnitude z)
+    (sqrt (+ (square (real-part z)) (square (imag-part z)))))
+  (define (angle z)
+    (atan (imag-part z) (real-part z)))
+  (define (make-from-real-imag x y) (cons x y))
+  (define (make-from-mag-ang r a) (cons (* r (cos a)) (* r (sin a))))
+
+  (define (tag x) (attach-tag 'rectangular x))
+  (put 'real-part '(rectangular) real-part)
+  (put 'imag-part '(rectangular) imag-part)
+  (put 'magnitude '(rectangular) magnitude)
+  (put 'angle     '(rectangular) angle)
+  (put 'make-from-real-imag 'rectangular
+       (lambda (x y) (tag (make-from-real-imag x y))))
+  (put 'make-from-mag-ang 'rectangular
+       (lambda (r a) (tag (make-from-mag-ang r a))))
+  'done)
+
+(define (install-polar-package)
+  (define (real-part z)
+    (* (magnitude z) (cos (angle z))))
+  (define (imag-part z)
+    (* (magnitude z) (sin (angle z))))
+  (define (magnitude z) (car z))
+  (define (angle z) (cdr z))
+  (define (make-from-real-imag x y)
+    (cons (sqrt (+ (square x) (square y)))
+          (atan y x)))
+  (define (make-from-mag-ang r a)
+    (cons r a))
+
+  (define (tag x) (attach-tag 'polar x))
+  (put 'real-part '(polar) real-part)
+  (put 'imag-part '(polar) imag-part)
+  (put 'magnitude '(polar) magnitude)
+  (put 'angle     '(polar) angle)
+  (put 'make-from-real-imag 'polar
+       (lambda (x y) (tag (make-from-real-imag x y))))
+  (put 'make-from-mag-ang 'polar
+       (lambda (r a) (tag (make-from-mag-ang r a))))
+  'done)
+
+(define (apply-generic op . args)
+  (let ((type-tags (map type-tag args)))
+    (let ((proc (get op type-tags)))
+      (if proc
+          (apply proc (map contents args))
+          (error
+           "No method for these types -- APPLY-GENERIC"
+           (list op type-tags))))))
+
+;(install-rectangular-package)
+;(install-polar-package)
+
+(define (real-part z) (apply-generic 'real-part z))
+(define (imag-part z) (apply-generic 'imag-part z))
+(define (magnitude z) (apply-generic 'magnitude z))
+(define (angle z) (apply-generic 'angle z))
+(define (make-from-real-imag x y)
+  ((get 'make-from-real-imag 'rectangular) x y))
+(define (make-from-mag-ang r a)
+  ((get 'make-from-mag-ang 'polar) r a))
+
+;; exercise 2.73
+
 (define (deriv exp var)
   (cond ((number? exp) 0)
-        ((variable? exp)
-         (if (same-variable? exp var) 1 0))
-        ((sum? exp)
-         (make-sum (deriv (addend exp) var)
-                   (deriv (augend exp) var)))
-        ((product? exp)
-         (make-sum
-          (make-product (multiplier exp)
-                        (deriv (multiplicand exp) var))
-          (make-product (deriv (multiplier exp) var)
-                        (multiplicand exp))))
-        ((exponentiation? exp)
-         (make-product (make-product (exponent exp)
-                                     (make-exponentiation (base exp)
-                                                          (- (exponent exp) 1)))
-                       (deriv (base exp) var)))
-        (else
-         (error "unknown expression type -- DERIV" exp))))
+        ((variable? exp) (if (same-variable? exp var) 1 0))
+        (else ((get 'deriv (operator exp)) (operands exp)
+                                           var))))
 
-(define (exponentiation? e)
-  (and (pair? e) (eq? (car e) '**)))
+(define (operator exp) (car exp))
 
-(define (base e) (cadr e))
+(define (operands exp) (cdr exp))
 
-(define (exponent e) (caddr e))
+(define (=number? exp num)
+    (and (number? exp) (= exp num)))
 
-;(define (make-exponentiation base exponent)
-;  (list '** base exponent))
-
-(define (make-exponentiation b e)
-  (cond ((=number? e 0) 1)
-        ((=number? e 1) b)
-        ((and (number? b) (number? e)) (fast-expt b e))
-        (else (list '** b e))))
-
-;; exercise 2.57
-;(define (augend e)
-;  (cadr e))
-
-;(define (addend e)
-;  (if (null? (cdddr e))
-;      (caddr e)
-;      (cons '+ (cddr e))))
-
-;(define (multiplicand e)
-;  (cadr e))
-
-;(define (multiplier e)
-;  (if (null? (cdddr e))
-;      (caddr e)
-;      (cons '* (cddr e))))
-
-;; exercise 2.58
 ;; a)
-;술어 -> cadr로 기호 확인
-;짜맞추개 -> list로 구현하되 기호 위치만 바꾼다
-;고르개 -> 기호를 기준으로 왼쪽과 오른쪽으로 나눔
-
-(define (make-sum a1 a2)
-  (cond ((=number? a1 0) a2)
-        ((=number? a2 0) a1)
-        ((and (number? a1) (number? a2)) (+ a1 a2))
-        (else (list a1 '+ a2))))
-
-(define (make-product m1 m2)
-  (cond ((or (=number? m1 0) (=number? m2 0)) 0)
-        ((=number? m1 1) m2)
-        ((=number? m2 1) m1)
-        ((and (number? m1) (number? m2)) (* m1 m2))
-        (else (list m1 '* m2))))
-
-;(define (sum? x)
-;  (and (pair? x) (eq? (cadr x) '+)))
-
-(define (augend s)
-  (define (rec s)
-    (if (eq? (car s) '+)
-        nil
-        (cons (car s) (rec (cdr s)))))
-  (if (eq? (cadr s) '+)
-      (car s)
-      (rec s)))
-
-(define (addend s)
-  (if (null? (cdddr s))
-      (caddr s)
-      (cddr s)))
-
-;(define (product? x)
-;  (and (pair? x) (eq? (cadr x) '*)))
-
-(define (multiplicand s)
-  (define (rec s)
-    (if (eq? (car s) '*)
-        nil
-        (cons (car s) (rec (cdr s)))))
-  (if (eq? (cadr s) '*)
-      (car s)
-      (rec s)))
-
-(define (multiplier s)
-  (if (null? (cdddr s))
-      (caddr s)
-      (cddr s)))
+; 숫자나 미지수는 따로 처리하고, 그 외의 연산은 각 타입에서 정의한 대로 계산한다.
+; 숫자 데이터나 미지수는 다른 데이터와는 달리 operator와 operands를 정의하기 힘들다.
 
 ;; b)
-;sum?에서 주어진 식에 적어도 하나 이상의 + 기호가 있어야 하고,
-;product?에서는 주어진 식에 모든 기호가 * 여야 한다
+(define (install-sum-package)
+  (define (make-sum a1 a2)
+     (cond ((=number? a1 0) a2)
+           ((=number? a2 0) a1)
+           ((and (number? a1) (number? a2)) (+ a1 a2))
+           (else (list '+ a1 a2))))
+  (define (augend s) (car s))
+  (define (addend s) (cadr s))
+  (define (deriv-sum exp var)
+    (make-sum (deriv (addend exp) var)
+              (deriv (augend exp) var)))
 
-(define (sum? x)
-  (cond ((null? (cdr x)) #f)
-        ((eq? (cadr x) '+) #t)
-        (else (sum? (cddr x)))))
+  (put 'make-sum '+ make-sum)
+  (put 'deriv '+ deriv-sum)
+  'done)
 
-(define (product? x)
-  (cond ((null? (cdr x)) #t)
-        ((eq? (cadr x) '*) (product? (cddr x)))
-        (else #f)))
+(define (install-product-package)
+  (define (make-product m1 m2)
+    (cond ((or (=number? m1 0) (=number? m2 0)) 0)
+          ((=number? m1 1) m2)
+          ((=number? m2 1) m1)
+          ((and (number? m1) (number? m2)) (* m1 m2))
+          (else (list '* m1 m2))))
+  (define (multiplicand s) (car s))
+  (define (multiplier s) (cadr s))
+  (define (deriv-product exp var)
+    (make-sum
+     (make-product (multiplier exp)
+                   (deriv (multiplicand exp) var))
+     (make-product (deriv (multiplier exp) var)
+                   (multiplicand exp))))
 
-;; 2.3.3
-;(define (element-of-set? x set)
-;  (cond ((null? set) #f)
-;        ((equal? x (car set)) #t)
-;        (else (element-of-set? x (cdr set)))))
 
-;(define (adjoin-set x set)
-;  (if (element-of-set? x set)
-;      set
-;      (cons x set)))
+  (put 'make-product '* make-product)
+  (put 'deriv '* deriv-product)
+  'done)
 
-;(define (intersection-set set1 set2)
-;  (cond ((or (null? set1) (null? set2)) '())
-;        ((element-of-set? (car set1) set2)
-;         (cons (car set1)
-;               (intersection-set (cdr set1) set2)))
-;        (else (intersection-set (cdr set1) set2))))
+(install-sum-package)
+(install-product-package)
 
-;; exercise 2.59
-;(define (union-set set1 set2)
-;  (cond ((null? set1) set2)
-;        ((not (element-of-set? (car set1) set2))
-;         (cons (car set1) (union-set (cdr set1) set2)))
-;        (else
-;         (union-set (cdr set1) set2))))
+(define (make-sum . ops) (apply-generic 'make-sum ops))
+(define (make-product . ops) (apply-generic 'make-product ops))
 
-;; exercise 2.60
-;(define (adjoin-set x set)
-;  (cons x set))
+;; c)
+(define (install-frac-package)
+  (define (make-frac n d)
+    (cond ((=number? d 0) (error "Divided by 0 -- MAKE-FRAC"))
+          ((=number? d 1) n)
+          ((=number? n 0) 0)
+          (else (list '/ n d))))
+  (define (numer f) (car f))
+  (define (denom f) (cadr f))
+  (define (deriv-frac exp var)
+    (make-frac (make-sum (make-product (deriv (numer exp) var)
+                                       (denom exp))
+                         (make-product -1
+                                       (make-product (numer exp)
+                                                     (deriv (denom exp) var))))
+               (make-product (denom exp)
+                             (denom exp))))
 
-;(define (union-set set1 set2)
-;  (append set1 set2))
+  (put 'make-frac '/ make-frac)
+  (put 'deriv '/ deriv-frac)
+  'done)
 
-; ajoin-set이나 union-set을 자주 사용할 때
+(install-frac-package)
 
-;; 2.3.3 (continue)
-;(define (element-of-set? x set)
-;  (cond ((null? set) #f)
-;        ((= x (car set)) #t)
-;        ((> x (car set)) #f)
-;        ((< x (car set))
-;         (element-of-set? x (cdr set)))))
-
-;(define (intersection-set set1 set2)
-;  (if (or (null? set1) (null? set2))
-;      '()
-;      (let ((x1 (car set1)) (x2 (car set2)))
-;        (cond ((= x1 x2)
-;               (cons x1
-;                     (intersection-set (cdr set1)
-;                                       (cdr set2))))
-;              ((< x1 x2)
-;               (intersection-set (cdr set1) set2))
-;              ((> x1 x2)
-;               (intersection-set set1 (cdr set2)))))))
-
-;; exercise 2.61
-;(define (adjoin-set x set)
-;  (cond ((null? set) (list x))
-;        ((> x (car set))
-;         (cons (car set)
-;               (adjoin-set x (cdr set))))
-;        ((= x (car set)) set)
-;        ((< x (car set)) (cons x set))))
-
-;adjoin-set을 구현할 때 순서있는 리스트의 장점은
-;굳이 set에 x가 있는지 먼저 확인할 필요가 없다는 점이다.
-;순서있는 리스트를 사용한다면 element-of-set?을 통해 확인하는 대신에
-;x와 (car set)의 대소비교를 통해
-;x가 set에 이미 포함되어있는지, 그리고 어디에 x를 집어넣어야하는지
-;재귀를 통해 확인이 가능하다.
-;그래서 평균적으로 n/2정도의 단계를 거치게 된다.
-
-;; exercise 2.62
-;(define (union-set set1 set2)
-;  (cond ((null? set1) set2)
-;        ((null? set2) set1)
-;        (else
-;         (let ((x1 (car set1)) (x2 (car set2)))
-;           (cond ((= x1 x2)
-;                  (cons x1
-;                        (union-set (cdr set1)
-;                                   (cdr set2))))
-;                 ((< x1 x2)
-;                  (cons x1
-;                        (union-set (cdr set1)
-;                                   set2)))
-;                 ((> x1 x2)
-;                  (cons x2
-;                        (union-set set1
-;                                   (cdr set2)))))))))
-
-;; 2.3.3 (continue)
-(define (entry tree) (car tree))
-;(define (left-branch tree) (cadr tree))
-;(define (right-branch tree) (caddr tree))
-
-(define (make-tree entry left right)
-  (list entry left right))
-
-(define (element-of-set? x set)
-  (cond ((null? set) #f)
-        ((= x (entry set)) #t)
-        ((< x (entry set))
-         (element-of-set? x (left-branch set)))
-        ((> x (entry set))
-         (element-of-set? x (right-branch set)))))
-
-;(define (adjoin-set x set)
-;  (cond ((null? set) (make-tree x '() '()))
-;        ((= x (entry set)) set)
-;        ((< x (entry set))
-;         (make-tree (entry set)
-;                    (adjoin-set x (left-branch set))
-;                    (right-branch set)))
-;        ((> x (entry set))
-;         (make-tree (entry set)
-;                    (left-branch set)
-;                    (adjoin-set x (right-branch set))))))
-
-;; exercise 2.63
-(define (tree->list-1 tree)
-  (if (null? tree)
-      '()
-      (append (tree->list-1 (left-branch tree))
-              (cons (entry tree)
-                    (tree->list-1 (right-branch tree))))))
-
-(define (tree->list-2 tree)
-  (define (copy-to-list  tree result-list)
-    (if (null? tree)
-        result-list
-        (copy-to-list (left-branch tree)
-                      (cons (entry tree)
-                            (copy-to-list (right-branch tree)
-                                          result-list)))))
-  (copy-to-list tree '()))
-
-(define tree->list tree->list-1)
-;; a)
-; 같다. left-tree, entry, right-tree 순서는 서로 같다.
-;; b)
-; 둘다 O(log_2 n)
-
-;; exercise 2.64
-(define (list->tree elements)
-  (car (partial-tree elements (length elements))))
-
-(define (partial-tree elts n)
-  (if (= n 0)
-      (cons '() elts)
-      (let ((left-size (quotient (- n 1) 2)))
-        (let ((left-result (partial-tree elts left-size)))
-          (let ((left-tree (car left-result))
-                (non-left-elts (cdr left-result))
-                (right-size (- n (+ left-size 1))))
-            (let ((this-entry (car non-left-elts))
-                  (right-result (partial-tree (cdr non-left-elts)
-                                              right-size)))
-              (let ((right-tree (car right-result))
-                    (remaining-elts (cdr right-result)))
-                (cons (make-tree this-entry left-tree right-tree)
-                      remaining-elts))))))))
-
-;원소 리스트와 트리에 쓰일 원소 개수를 매개변수로 받으면
-;먼저 left-tree를 구한다.
-;left-tree는 처음에 받았던 원소 리스트와 left-tree에 쓰일 원소들의 개수(left-size)를 넘겨받으면
-;만들어진 left-tree와 남은 원소 리스트(non-left-elts)를 pair를 통해 받는다.(left-result)
-;여기서 non-left-elts에서 entry를 얻고(this-entry) 남은 원소들로 right-tree를 만든다.
-;먼저 entry까지 뽑고 남은 원소 리스트와 right-tree에 쓰일 원소들의 개수(right-size)를 구한다음
-;이를 통해 right-tree를 구한다. 이때 right-tree까지 만들고 남은 원소는 remaining-elts로 내보낸다.
-
-;; exercise 2.65
-(define (union-set set1 set2)
-  (define (iter list1 list2 result)
-    (cond ((null? list1) (append result list2))
-          ((null? list2) (append result list1))
-          (else (let ((x1 (car list1))
-                      (x2 (car list2)))
-                  (cond ((= x1 x2)
-                         (iter (cdr list1)
-                               (cdr list2)
-                               (append result (list x1))))
-                        ((> x1 x2)
-                         (iter list1
-                               (cdr list2)
-                               (append result (list x2))))
-                        ((< x1 x2)
-                         (iter (cdr list1)
-                               list2
-                               (append result (list x1)))))))))
-  (list->tree (iter (tree->list set1)
-                    (tree->list set2)
-                    '())))
-
-(define (intersection-set set1 set2)
-  (define (filter-same s1 s2 result)
-    (if (or (null? s1) (null? s2))
-         result
-         (let ((x1 (car s1))
-               (x2 (car s2)))
-           (cond ((= x1 x2) (filter-same (cdr s1)
-                                         (cdr s2)
-                                         (append result (list x1))))
-                 ((> x1 x2) (filter-same s1
-                                         (cdr s2)
-                                         result))
-                 ((< x1 x2) (filter-same (cdr s1)
-                                         s2
-                                         result))))))
-  (list->tree (filter-same (tree->list set1)
-                           (tree->list set2)
-                           '())))
-
-;; 2.3.3 (continue)
-(define (key record) (car record))
-
-;(define (lookup given-key set-of-records)
-;  (cond ((null? set-of-records) #f)
-;        ((equal? given-key (key (car set-of-records)))
-;         (car set-of-records))
-;        (else (lookup given-key (cdr set-of-records)))))
-
-;; exericse 2.66
-
-(define (lookup given-key set-of-records)
-  (cond ((null? set-of-records) #f)
-        ((= given-key
-            (key (entry set-of-records)))
-         (entry set-of-records))
-        ((> given-key
-            (key (entry set-of-records)))
-         (lookup given-key (right-branch set-of-records)))
-        ((< given-key
-            (key (entry set-of-records)))
-         (lookup given-key (left-branch set-of-records)))))
-
-;; 2.3.4
-(define (make-leaf symbol weight)
-  (list 'leaf symbol weight))
-
-(define (leaf? object)
-  (eq? (car object) 'leaf))
-
-(define (symbol-leaf x) (cadr x))
-
-(define (weight-leaf x) (caddr x))
-
-(define (make-code-tree left right)
-  (list left
-        right
-        (append (symbols left) (symbols right))
-        (+ (weight left) (weight right))))
-
-(define (left-branch tree) (car tree))
-
-(define (right-branch tree) (cadr tree))
-
-(define (symbols tree)
-  (if (leaf? tree)
-      (list (symbol-leaf tree))
-      (caddr tree)))
-
-(define (weight tree)
-  (if (leaf? tree)
-      (weight-leaf tree)
-      (cadddr tree)))
-
-(define (decode bits tree)
-  (define (decode-1 bits current-branch)
-    (if (null? bits)
-        '()
-        (let ((next-branch
-               (choose-branch (car bits) current-branch)))
-          (if (leaf? next-branch)
-              (cons (symbol-leaf next-branch)
-                   (decode-1 (cdr bits) tree))
-              (decode-1 (cdr bits) next-branch)))))
-  (decode-1 bits tree))
-
-(define (choose-branch bit branch)
-  (cond ((= bit 0) (left-branch branch))
-        ((= bit 1) (right-branch branch))
-        (else (error "bad bit -- CHOOSE-BRANCH" bit))))
-
-(define (adjoin-set x set)
-  (cond ((null? set) (list x))
-        ((< (weight x) (weight (car set))) (cons x set))
-        (else (cons (car set)
-                    (adjoin-set x (cdr set))))))
-
-(define (make-leaf-set pairs)
-  (if (null? pairs)
-      '()
-      (let ((pair (car pairs)))
-        (adjoin-set (make-leaf (car pair)
-                               (cadr pair))
-                    (make-leaf-set (cdr pairs))))))
-
-;; exercise 2.67
-(define sample-tree
-  (make-code-tree (make-leaf 'A 4)
-                  (make-code-tree
-                   (make-leaf 'B 2)
-                   (make-code-tree (make-leaf 'D 1)
-                                   (make-leaf 'C 1)))))
-
-(define sample-message '(0 1 1 0 0 1 0 1 0 1 1 1 0))
-
-;> (decode sample-message sample-tree)
-;(A D A B B C A)
-
-;; exercise 2.68
-(define (encode message tree)
-  (if (null? message)
-      '()
-      (append (encode-symbol (car message) tree)
-              (encode (cdr message) tree))))
-
-(define (encode-symbol symbol tree)
-  (define (isin? x s)
-    (cond ((null? s) #f)
-          ((eq? x (car s)) #t)
-          (else (isin? x (cdr s)))))
-  (cond ((null? tree) #f)
-        ((leaf? tree)
-         (if (eq? symbol (symbol-leaf tree))
-             '()
-             #f))
-        (else
-         (let ((left-tree (left-branch tree))
-               (right-tree (right-branch tree)))
-           (let ((is-in-left? (isin? symbol (symbols left-tree)))
-                 (is-in-right? (isin? symbol (symbols right-tree))))
-             (cond ((is-in-left?
-                     (cons 0
-                           (encode-symbol symbol left-tree)))
-                    (is-in-right?
-                     (cons 1
-                           (encode-symbol symbol right-tree))))
-                   (else #f)))))))
-
-;> (encode '(A D A B B C A) sample-tree)
-;(0 1 1 0 0 1 0 1 0 1 1 1 0)
-
-;; exercise 2.69
-(define (generate-huffman-tree pairs)
-  (successive-merge (make-leaf-set pairs)))
-
-(define (successive-merge leaf-set)
-  (if (= (length leaf-set) 0)
-      '()
-      (adjoin-set (car leaf-set)
-                  (successive-merge (cdr leaf-set)))))
-
-;; exercise 2.70
-(define ex70-tree
-  (generate-huffman-tree '((A 2) (BOOM 1) (GET 2) (JOB 2)
-                           (NA 16) (SHA 3) (YIP 9) (WAH 1))))
-
-(define ex70-message
-  '(GET A JOB
-    SHA NA NA NA NA NA NA NA NA
-    GET A JOB
-    SHA NA NA NA NA NA NA NA NA
-    WAH YIP YIP YIP YIP YIP YIP YIP YIP YIP
-    SHA BOOM))
-
-;; exercise 2.71
-; n = 5
-; the longest = 1 weight(4 bits)
-; the shortest = 16 weight(1 bit)
-; n = 10
-; the longest = 1 weight(9 bits)
-; the shortest = 512 weight(1 bit)
-
-;; exercise 2.72
-; 만약 허프만 트리가 균형 이진 트리라면
-; 빈도에 관계없이 O(log_2(n))이 된다.
-; 2.71과 같은 모습이라면
-; 가장 빈번한 코드는 O(1)
-; 가장 뜸한 코드는  O(n)이 된다.
+(define (make-frac . ops) (apply-generic 'make-frac ops))
