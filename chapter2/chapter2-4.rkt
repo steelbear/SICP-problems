@@ -3,6 +3,18 @@
 ;; 1.2
 (define (square x) (* x x))
 
+;; 2.2
+(define (accumulate op initial sequence)
+  (if (null? sequence)
+      initial
+      (op (car sequence)
+          (accumulate op initial (cdr sequence)))))
+
+(define (flat-map f s)
+  (accumulate append
+              nil
+              (map f s)))
+
 ;; 2.3
 (define (variable? x) (symbol? x))
 
@@ -195,14 +207,14 @@
 ;(install-rectangular-package)
 ;(install-polar-package)
 
-(define (real-part z) (apply-generic 'real-part z))
-(define (imag-part z) (apply-generic 'imag-part z))
-(define (magnitude z) (apply-generic 'magnitude z))
-(define (angle z) (apply-generic 'angle z))
-(define (make-from-real-imag x y)
-  ((get 'make-from-real-imag 'rectangular) x y))
-(define (make-from-mag-ang r a)
-  ((get 'make-from-mag-ang 'polar) r a))
+;(define (real-part z) (apply-generic 'real-part z))
+;(define (imag-part z) (apply-generic 'imag-part z))
+;(define (magnitude z) (apply-generic 'magnitude z))
+;(define (angle z) (apply-generic 'angle z))
+;(define (make-from-real-imag x y)
+;  ((get 'make-from-real-imag 'rectangular) x y))
+;(define (make-from-mag-ang r a)
+;  ((get 'make-from-mag-ang 'polar) r a))
 
 ;; exercise 2.73
 
@@ -230,15 +242,20 @@
            ((=number? a2 0) a1)
            ((and (number? a1) (number? a2)) (+ a1 a2))
            (else (list '+ a1 a2))))
-  (define (augend s) (car s))
-  (define (addend s) (cadr s))
+  (define (augend s) (cadr s))
+  (define (addend s) (caddr s))
   (define (deriv-sum exp var)
     (make-sum (deriv (addend exp) var)
               (deriv (augend exp) var)))
 
+  (define (tag x) (attach-tag '+ x))
   (put 'make-sum '+ make-sum)
-  (put 'deriv '+ deriv-sum)
+  (put 'deriv '+
+       (lambda (opr var) (deriv-sum (tag opr) var)))
   'done)
+
+(install-sum-package)
+(define make-sum (get 'make-sum '+))
 
 (define (install-product-package)
   (define (make-product m1 m2)
@@ -247,8 +264,8 @@
           ((=number? m2 1) m1)
           ((and (number? m1) (number? m2)) (* m1 m2))
           (else (list '* m1 m2))))
-  (define (multiplicand s) (car s))
-  (define (multiplier s) (cadr s))
+  (define (multiplicand s) (cadr s))
+  (define (multiplier s) (caddr s))
   (define (deriv-product exp var)
     (make-sum
      (make-product (multiplier exp)
@@ -256,16 +273,14 @@
      (make-product (deriv (multiplier exp) var)
                    (multiplicand exp))))
 
-
+  (define (tag x) (attach-tag '* x))
   (put 'make-product '* make-product)
-  (put 'deriv '* deriv-product)
+  (put 'deriv '*
+       (lambda (opr var) (deriv-product (tag opr) var)))
   'done)
 
-(install-sum-package)
 (install-product-package)
-
-(define (make-sum . ops) (apply-generic 'make-sum ops))
-(define (make-product . ops) (apply-generic 'make-product ops))
+(define make-product (get 'make-product '*))
 
 ;; c)
 (define (install-frac-package)
@@ -274,8 +289,8 @@
           ((=number? d 1) n)
           ((=number? n 0) 0)
           (else (list '/ n d))))
-  (define (numer f) (car f))
-  (define (denom f) (cadr f))
+  (define (numer f) (cadr f))
+  (define (denom f) (caddr f))
   (define (deriv-frac exp var)
     (make-frac (make-sum (make-product (deriv (numer exp) var)
                                        (denom exp))
@@ -285,10 +300,83 @@
                (make-product (denom exp)
                              (denom exp))))
 
+  (define (tag x) (attach-tag '/ x))
   (put 'make-frac '/ make-frac)
-  (put 'deriv '/ deriv-frac)
+  (put 'deriv '/
+       (lambda (opr var) (deriv-frac (tag opr) var)))
   'done)
 
 (install-frac-package)
+(define make-frac (get 'make-frac '/))
 
-(define (make-frac . ops) (apply-generic 'make-frac ops))
+;; d)
+; put의 매개변수 순서가 바뀌지 않으면 바꿀 코드는 없다.
+; 만약 있다면 각 타입마다 put에게 넘기는 값의 순서를 바꾸면 된다.
+
+;; exercise 2.74
+;; a)
+(define (get-record name file)
+  (apply-generic 'get-record name file))
+; 모든 파일은 그 파일의 집합 구성 방식에 맞춰 get-record라는 프로시저를 가지고 있어야 한다.
+; 이 프로시저는 이름과 파일을 받아 해당 이름과 같은 이름을 가진 레코드의 리스트를 결과로 준다.
+; 각 파일은 태그를 가지고 있어야 하며, 해당 태그는
+; 파일 구성 방식이나 부서 이름으로 동일한 주제의 이름으로 정해져야 한다.
+
+;; b)
+(define (get-salary record)
+  (apply-generic 'get-salary record))
+; 각 레코드는 부서 이름으로 된 태그를 가지고있어야 한다.
+; 또한 어떤 레코드든 이름과 봉급 정보를 무조건 가지고 있어야 한다.
+
+;; c)
+(define (find-employee-record name database)
+  (flat-map (lambda (file)
+              (get-record name file))
+            database))
+
+;; d)
+; 해당 시스템을 그대로 가져온 다음
+; 그 시스템을 통해 get-record와 get-salary를 정의한다.
+; 그리고 각 파일과 레코드에 해당 시스템의 태그를 붙인 다음
+; put을 통해 해당 시스템일 때 적절한 프로시저를 찾도록 등록한다.
+
+;; 2.4.3 (continue)
+(define (make-from-real-imag x y)
+  (define (dispatch op)
+    (cond ((eq? op 'real-part) x)
+          ((eq? op 'imag-part) y)
+          ((eq? op 'magnitude)
+           (sqrt (+ (square x) (square y))))
+          ((eq? op 'angle) (atan x y))
+          (else (error "Unknown op -- MAKE-FROM-REAL-IMAG" op))))
+  dispatch)
+
+;(define (apply-generic op arg) (arg op))
+
+;; exercise 2.75
+(define (make-from-mag-ang r a)
+  (define (dispatch op)
+    (cond ((eq? op 'real-part) (* r (cos a)))
+          ((eq? op 'imag-part) (* r (sin a)))
+          ((eq? op 'magnitude) r)
+          ((eq? op 'angle) a)
+          (else (error "Unknown op -- MAKE-FROM-MAG-ANG" op))))
+  dispatch)
+
+;; exercise 2.76
+; 일을 직접 나눠 맡기는 경우
+; - 타입이나 연산을 추가하면 제너릭 프로시저를 수정해야 한다.
+; - 모든 타입을 알고 있어야 한다.
+; 데이터 중심 프로그래밍
+; - 타입을 추가해도 해당 제너릭 프로시저는 수정할 필요가 없다.
+; - 연산을 추가할 때 apply-generic이나 get을 통해 정의할 수 있으므로
+;   그 연산에 해당되는 모든 연산을 기억할 필요가 없다.
+; 메시지 패싱
+; - 타입을 추가하기만 하면 된다.
+; - 타입을 구분하기 위한 태그를 붙일 필요가 없다.
+; - 연산을 추가할 때는 필요한 타입에서 정의하기만 하면 쓸 수 있다.
+
+; 타입 추가 = 데이터 중심 프로그래밍
+;            -> 다른 코드에서 정의한 부분을 그대로 사용이 가능하다.
+; 연산 추가 = 메시지 패싱
+;            -> 저장할 데이터를 바로 사용할 수 있다.
